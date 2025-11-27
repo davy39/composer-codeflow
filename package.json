@@ -1,0 +1,37 @@
+{
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "// --- UTILITAIRES ---": "Définition des exécuteurs de base",
+        "proxy": "node scripts/proxy.js",
+        "php": "node scripts/php-cli.js",
+        "composer": "npm run php -- vendor/bin/composer --no-scripts",
+        "artisan": "npm run php -- artisan",
+
+        "// --- SETUP & INSTALLATION (AVEC PROXY) ---": "Lance le proxy temporairement juste pour Composer",
+        "install:php": "node scripts/install-php.js",
+        "install:composer": "node scripts/install-composer.js",
+        "install:proxy": "COMPOSER=composer-proxy.json npm run composer:update && COMPOSER=composer-proxy.json npm run composer:install",
+        "composer:update": 
+        "concurrently --kill-others --success first --names \"PROXY,COMPOSER\" -c \"bgBlue,bgMagenta\" \"npm run proxy\" \"wait-on tcp:9999 && npm run composer -- update\"",
+        "composer:install": 
+        "concurrently --kill-others --success first --names \"PROXY,COMPOSER\" -c \"bgBlue,bgMagenta\" \"npm run proxy\" \"wait-on tcp:9999 && npm run composer -- install\"",        
+        "postinstall": "npm run install:php && npm run install:composer && npm run install:proxy",
+
+        "// --- SERVEURS ---": "Serveurs pour le mode DEV",
+        "php:serve": "node scripts/php-server.js",
+        "vite:serve": "vite --open",
+        "build": "vite build",
+
+        "// --- MODE DEV (HOT RELOAD) ---": "Lance tout sans le proxy",
+        "dev": "concurrently --kill-others --names \"PHP,VITE\" -c \"bgGreen,bgCyan\" \"npm run php:serve\" \"wait-on tcp:2222 && npm run vite:serve\""
+    },
+    "devDependencies": {
+        "@dotenvx/dotenvx": "^1.51.0",
+        "concurrently": "^9.2.1",
+        "tar": "^7.5.2",
+        "vite": "^7.0.0",
+        "wait-on": "^9.0.0"
+    }
+}

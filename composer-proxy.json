@@ -1,0 +1,26 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "composer/proxy",
+    "type": "project",
+    "description": "Install composer proxy plugin locally .",
+    "require": {
+        "custom/composer-proxy": "dev-main"
+    },
+    "config": {
+        "allow-plugins": {
+            "custom/codetabs-proxy": true
+        }
+    },
+    "repositories": [
+        {
+            "packagist.org": false
+        },
+        {
+            "type": "path",
+            "url": "./composer-proxy",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
+}
