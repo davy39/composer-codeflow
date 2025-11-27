@@ -9,7 +9,7 @@ use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\Plugin\PluginEvents;
 use Composer\Plugin\PreFileDownloadEvent;
 
-class CodetabsProxyPlugin implements PluginInterface, EventSubscriberInterface
+class ComposerProxyPlugin implements PluginInterface, EventSubscriberInterface
 {
     public function activate(Composer $composer, IOInterface $io) {}
     public function deactivate(Composer $composer, IOInterface $io) {}

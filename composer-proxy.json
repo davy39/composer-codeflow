@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "composer/proxy",
+    "name": "davy39/composer-codeflow",
     "type": "project",
     "description": "Install composer proxy plugin locally .",
     "require": {
@@ -8,7 +8,7 @@
     },
     "config": {
         "allow-plugins": {
-            "custom/codetabs-proxy": true
+            "custom/composer-proxy": true
         }
     },
     "repositories": [

@@ -1,0 +1,49 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "c50179d46b35e932c79bf053a1bf65be",
+    "packages": [
+        {
+            "name": "custom/composer-proxy",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "./composer-proxy",
+                "reference": "a12a9aa9ea204b11b9c5b0b805d0e6e2eafcc5f9"
+            },
+            "require": {
+                "composer-plugin-api": "^2.0"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "Custom\\Proxy\\ComposerProxyPlugin"
+            },
+            "autoload": {
+                "psr-4": {
+                    "Custom\\Proxy\\": "./"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "custom/composer-proxy": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
+}
