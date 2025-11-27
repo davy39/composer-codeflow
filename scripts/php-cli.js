@@ -6,32 +6,69 @@
  *
  * PURPOSE:
  * Loads the PHP-WASM runtime and executes PHP scripts or Composer commands.
- * This script assumes a "Sidecar" proxy is ALREADY RUNNING on localhost:9999.
+ * Automatically starts and manages the Sidecar proxy on localhost:9999.
  *
  * RESPONSIBILITIES:
- * 1. Mounts the current working directory so PHP can access files.
- * 2. Injects `LOCAL_PROXY_URL` environment variable for network requests.
- * 3. Pipes PHP stdout/stderr to the Node.js console.
- * 4. Handles CLI arguments and "disable_functions" configuration.
+ * 1. Starts the proxy server before executing commands.
+ * 2. Mounts the current working directory so PHP can access files.
+ * 3. Injects `LOCAL_PROXY_URL` environment variable for network requests.
+ * 4. Pipes PHP stdout/stderr to the Node.js console.
+ * 5. Handles CLI arguments and "disable_functions" configuration.
+ * 6. Cleans up the proxy server when done.
  */
 
 import { PHP } from "@php-wasm/universal";
 import { loadNodeRuntime, createNodeFsMountHandler } from "@php-wasm/node";
 import env from "./env.js"; // Ensure this file exists and exports { php: { version: '...' } }
 import path from 'node:path';
+import { spawn } from 'node:child_process';
+import { promisify } from 'node:util';
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
 const PROXY_URL = 'http://127.0.0.1:9999';
+const PROXY_PORT = 9999;
 
 // ============================================================================
 // MAIN EXECUTION
 // ============================================================================
 
 (async () => {
+    let proxyProcess = null;
+    
     try {
+        // 0. Start Proxy Server
+        console.log('[Host] Starting Sidecar Proxy...');
+        proxyProcess = spawn('node', [path.resolve(process.cwd(), 'scripts/proxy.js')], {
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+        
+        // Wait for proxy to be ready
+        await new Promise((resolve, reject) => {
+            let output = '';
+            
+            const checkReady = (data) => {
+                output += data.toString();
+                if (output.includes('Sidecar Proxy running at http://127.0.0.1:9999')) {
+                    resolve();
+                }
+            };
+            
+            proxyProcess.stdout.on('data', checkReady);
+            proxyProcess.stderr.on('data', checkReady);
+            
+            proxyProcess.on('error', reject);
+            
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                reject(new Error('Proxy server failed to start within 10 seconds'));
+            }, 10000);
+        });
+        
+        console.log('[Host] Proxy server is ready');
+        
         // 1. Initialize PHP Runtime
         // Loads the WebAssembly binary specified in env.js
         const phpRuntimeId = await loadNodeRuntime(env.php.version);
@@ -101,10 +138,24 @@ const PROXY_URL = 'http://127.0.0.1:9999';
         const exitCode = await response.exitCode;
         await Promise.all([stdoutStreaming, stderrStreaming]).catch(() => {});
 
-        process.exit(typeof exitCode === 'number' ? exitCode : 0);
+        return typeof exitCode === 'number' ? exitCode : 0;
 
     } catch (err) {
         console.error(`[Host Error] PHP execution failed: ${err}`);
-        process.exit(1);
+        return 1;
+    } finally {
+        // Clean up proxy process
+        if (proxyProcess && !proxyProcess.killed) {
+            console.log('[Host] Stopping proxy server...');
+            proxyProcess.kill('SIGTERM');
+            
+            // Wait a moment for graceful shutdown
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Force kill if still running
+            if (!proxyProcess.killed) {
+                proxyProcess.kill('SIGKILL');
+            }
+        }
     }
 })();
