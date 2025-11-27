@@ -12,7 +12,7 @@
         "// --- SETUP & INSTALLATION (AVEC PROXY) ---": "Lance le proxy temporairement juste pour Composer",
         "install:php": "node scripts/install-php.js",
         "install:composer": "node scripts/install-composer.js",
-        "install:proxy": "COMPOSER=composer-proxy.json npm run composer:update && COMPOSER=composer-proxy.json npm run composer:install",
+        "install:proxy": "COMPOSER=composer-proxy.json npm run composer update && COMPOSER=composer-proxy.json npm run composer install",
         "composer:update": 
         "concurrently --kill-others --success first --names \"PROXY,COMPOSER\" -c \"bgBlue,bgMagenta\" \"npm run proxy\" \"wait-on tcp:9999 && npm run composer -- update\"",
         "composer:install": 
