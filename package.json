@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "source .bashrc && setup.sh"
+    "postinstall": "source .bashrc && ./scripts/setup.sh"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
