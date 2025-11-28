@@ -78,8 +78,6 @@ const isPortTaken = (port) => {
     if (portIsBusy) {
       proxyWasStartedByScript = false;
     } else {
-      console.error("[Host] Port 9999 is free. Starting Sidecar Proxy...");
-
       proxyProcess = spawn("node", [path.resolve(projectRoot, PROXY_SCRIPT)], {
         stdio: ["ignore", "pipe", "pipe"],
         detached: false,
@@ -106,8 +104,6 @@ const isPortTaken = (port) => {
         });
         setTimeout(() => reject(new Error("Proxy timeout")), 10000);
       });
-
-      console.error("[Host] Proxy server is ready");
       proxyWasStartedByScript = true;
     }
 
