@@ -1,0 +1,3 @@
+{
+  "startCommand": "source .jshrc && ./script/setup.sh"
+}
