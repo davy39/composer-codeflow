@@ -1,3 +1,7 @@
 {
-  "startCommand": "source .jshrc && ./script/setup.sh"
+  "startCommand": "source .jshrc && ./scripts/setup.sh",
+  "env": {
+    "PATH": "${PATH}:${PWD}/scripts:${PWD}/vendor/bin",
+    "COMPOSER_HOME": "${PWD}/.composer"
+  }
 }
