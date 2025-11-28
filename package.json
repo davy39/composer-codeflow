@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "source .bashrc && ./scripts/setup.sh"
+    "postinstall": "export PATH=$PATH:$PWD/scripts:$PWD/vendor/bin && export COMPOSER_HOME=$PWD/.composer && ./scripts/setup.sh"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.0",

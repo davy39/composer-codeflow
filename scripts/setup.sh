@@ -1,5 +1,4 @@
 #!/bin/bash
-source ../.bashrc
 install-php.js
 install-composer.js
 composer config --global cache-dir $PWD/.cache
