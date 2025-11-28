@@ -25,10 +25,6 @@ import fs from "fs";
 import https from "https";
 import env from "./env.js";
 
-if (!process.env.npm_config_user_agent && !process.env.VITEST) {
-  process.exit();
-}
-
 const composerUrl = `https://getcomposer.org/download/${env.composer.version}/composer.phar`;
 // Use CodeTabs free CORS proxy as first attempt; it accepts `quest=<url>`.
 // Note: CodeTabs limits requests to 5MB and allows only GET.
