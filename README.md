@@ -38,3 +38,23 @@ composer -d mon_site run dev
 ```
 
 Cliquez à gauche sur le port `8000` pour accéder au site.
+
+## Configuration de vite
+
+Pour permettre à vite de signaler au navigateur le rechargement du code, ajoutez la configuration suivante dans `vite.config.json`
+
+```json
+{
+  "server": {
+    // 1. Écouter sur toutes les interfaces (requis dans un conteneur)
+    "host": "0.0.0.0",
+    "allowedHosts": true,
+    // 2. Configuration HMR (Hot Module Replacement)
+    "hmr": {
+      // Force le client à utiliser 'localhost' au lieu de l'IP.
+      // Codeflow intercepte 'localhost' et le redirige via son tunnel sécurisé.
+      "host": "localhost"
+    }
+  }
+}
+```
