@@ -4,7 +4,7 @@
 
 ## 🐘 Tester
 
-[![Open in Codeflow](https://developer.stackblitz.com/img/open_in_codeflow.svg)](https://pr.new/davy39/composer-codeflow)
+[![Open in Codeflow](https://developer.stackblitz.com/img/open_in_codeflow.svg)](https://pr.new/davy39/composer-codeflow?file=README.md)
 
 _Si vous rencontrez des problèmes, esayez avec google chrome._
 
