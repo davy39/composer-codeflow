@@ -1,6 +1,3 @@
 {
-  "env": {
-    "PATH": "${PATH}:${PWD}/scripts:${PWD}/vendor/bin",
-    "COMPOSER_HOME": "${PWD}/.composer"
-  }
+  "startCommand": "source .jshrc"
 }
