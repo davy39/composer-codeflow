@@ -1,2 +1,6 @@
-node_modules/
+node_modules
 vendor/
+.cache
+.composer/*
+!.composer/config.json
+!.composer/composer.json

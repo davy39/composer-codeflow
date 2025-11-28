@@ -1,0 +1,266 @@
+#!/usr/bin/env node
+/**
+ * @file php
+ * @description
+ * PHP-WASM CLI EXECUTABLE WRAPPER
+ */
+
+import {PHP} from "@php-wasm/universal";
+import {loadNodeRuntime, createNodeFsMountHandler} from "@php-wasm/node";
+import env from "./env.js";
+import path from "node:path";
+import {spawn} from "node:child_process";
+import net from "node:net";
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+const PROXY_PORT = 9999;
+const PROXY_URL = `http://127.0.0.1:${PROXY_PORT}`;
+const PROXY_SCRIPT = "scripts/proxy.js";
+
+// ============================================================================
+// HELPER: PORT CHECK
+// ============================================================================
+
+const isPortTaken = (port) => {
+  return new Promise((resolve) => {
+    const tester = net
+      .createServer()
+      .once("error", (err) => {
+        if (err.code === "EADDRINUSE") resolve(true);
+        else resolve(false);
+      })
+      .once("listening", () => {
+        tester.close();
+        resolve(false);
+      })
+      .listen(port);
+  });
+};
+
+// ============================================================================
+// MAIN EXECUTION
+// ============================================================================
+
+(async () => {
+  let proxyProcess = null;
+  let finalExitCode = 0;
+  let proxyWasStartedByScript = false;
+
+  // NOUVEAU : Drapeau pour empêcher le finally de tuer le processus
+  let keepAlive = false;
+
+  const __filename = new URL(import.meta.url).pathname;
+  const __dirname = path.dirname(__filename);
+  const projectRoot = path.resolve(__dirname, "..");
+
+  const cleanupProxy = () => {
+    if (proxyProcess && !proxyProcess.killed) {
+      try {
+        proxyProcess.kill("SIGKILL");
+      } catch (e) {}
+    }
+  };
+
+  process.on("SIGINT", () => {
+    cleanupProxy();
+    process.exit(130);
+  });
+
+  try {
+    // ---------------------------------------------------------
+    // 1. Smart Proxy Startup
+    // ---------------------------------------------------------
+    const portIsBusy = await isPortTaken(PROXY_PORT);
+
+    if (portIsBusy) {
+      proxyWasStartedByScript = false;
+    } else {
+      console.error("[Host] Port 9999 is free. Starting Sidecar Proxy...");
+
+      proxyProcess = spawn("node", [path.resolve(projectRoot, PROXY_SCRIPT)], {
+        stdio: ["ignore", "pipe", "pipe"],
+        detached: false,
+      });
+
+      await new Promise((resolve, reject) => {
+        let output = "";
+        const checkReady = (data) => {
+          const str = data.toString();
+          output += str;
+          if (output.includes("Sidecar Proxy running")) resolve();
+        };
+
+        proxyProcess.stdout.on("data", checkReady);
+        proxyProcess.stderr.on("data", checkReady);
+
+        proxyProcess.on("error", (err) =>
+          reject(new Error(`Proxy spawn error: ${err}`))
+        );
+        proxyProcess.on("close", (code) => {
+          if (code !== 0 && !output.includes("Sidecar Proxy running")) {
+            reject(new Error(`Proxy exited prematurely with code ${code}`));
+          }
+        });
+        setTimeout(() => reject(new Error("Proxy timeout")), 10000);
+      });
+
+      console.error("[Host] Proxy server is ready");
+      proxyWasStartedByScript = true;
+    }
+
+    // ---------------------------------------------------------
+    // 2. Argument Parsing & Shims
+    // ---------------------------------------------------------
+    let args = process.argv.slice(2);
+
+    // SHIM 1: PAIL (Zombie Mode)
+    if (args.includes("artisan") && args.includes("pail")) {
+      console.error('[Host] Mocking "artisan pail" (Running in background...)');
+      setInterval(() => {}, 60000);
+      keepAlive = true; // IMPORTANT : On dit au finally de ne pas quitter
+      return;
+    }
+
+    // SHIM 2: QUEUE (Zombie Mode)
+    if (
+      args.includes("artisan") &&
+      (args.includes("queue:listen") || args.includes("queue:work"))
+    ) {
+      console.error(
+        '[Host] Mocking "artisan queue" (Running in background to save CPU...)'
+      );
+      setInterval(() => {}, 60000);
+      keepAlive = true; // IMPORTANT : On dit au finally de ne pas quitter
+      return;
+    }
+
+    // SHIM 3: SERVE
+    if (args.includes("artisan") && args.includes("serve")) {
+      console.error(
+        '[Host] Intercepting "artisan serve" -> Switching to Node.js Server'
+      );
+      const serveScript = path.resolve(projectRoot, "scripts/serve.js");
+      const nodeServer = spawn("node", [serveScript], {
+        stdio: "inherit",
+        env: process.env,
+      });
+      // Pour le serveur, on attend qu'il ferme, donc pas besoin de keepAlive manuel ici
+      // car le await bloque jusqu'à la fin.
+      await new Promise((resolve) =>
+        nodeServer.on("close", (code) => process.exit(code || 0))
+      );
+      return;
+    }
+
+    // Disable cURL
+    const funcsToDisable = "curl_init,curl_exec,curl_multi_init,curl_setopt";
+    if (!args.includes("disable_functions")) {
+      args = ["-d", `disable_functions=${funcsToDisable}`, ...args];
+    }
+
+    // ---------------------------------------------------------
+    // 3. Initialize PHP Runtime
+    // ---------------------------------------------------------
+    const phpRuntimeId = await loadNodeRuntime(env.php.version);
+    const php = new PHP(phpRuntimeId);
+
+    // ---------------------------------------------------------
+    // 4. File System Setup
+    // ---------------------------------------------------------
+    php.mkdir(projectRoot);
+    php.mount(projectRoot, createNodeFsMountHandler(projectRoot));
+
+    if (process.cwd() !== projectRoot) {
+      php.chdir(process.cwd());
+    } else {
+      php.chdir(projectRoot);
+    }
+
+    try {
+      php.mkdir("/usr/bin");
+      php.mount("/usr/bin", createNodeFsMountHandler("/usr/bin"));
+      php.mkdir("/bin");
+      php.mount("/bin", createNodeFsMountHandler("/bin"));
+    } catch (e) {
+      console.error(
+        "[Host] Warning: Could not mount system binaries:",
+        e.message
+      );
+    }
+
+    // ---------------------------------------------------------
+    // 5. Environment Variables Setup
+    // ---------------------------------------------------------
+    const envVars = {
+      LOCAL_PROXY_URL: `${PROXY_URL}/?url=`,
+      COMPOSER: process.env.COMPOSER || "composer.json",
+      COMPOSER_PROCESS_TIMEOUT: process.env.COMPOSER_PROCESS_TIMEOUT || "600",
+      COMPOSER_HOME: path.resolve(projectRoot, ".composer"),
+      COMPOSER_NO_INTERACTION: true,
+      PHP_BINARY: path.join(__dirname, "php"),
+      SKIP_PROXY: "true",
+      PATH: __dirname + path.delimiter + (process.env.PATH || ""),
+      DOTENV_CONFIG_QUIET: "true",
+      DOTENVX_QUIET: "true",
+      ...process.env,
+    };
+
+    // ---------------------------------------------------------
+    // 6. Execute PHP
+    // ---------------------------------------------------------
+    const response = await php.cli(["php", ...args], {
+      env: envVars,
+    });
+
+    // ---------------------------------------------------------
+    // 7. Output Streaming
+    // ---------------------------------------------------------
+    const streamToNodeWritable = async (readable, writable) => {
+      const reader = readable.getReader();
+      try {
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          if (value) writable.write(Buffer.from(value));
+        }
+      } catch (e) {
+        console.error("[Host] Stream error:", e);
+      } finally {
+        try {
+          reader.releaseLock();
+        } catch (e) {}
+      }
+    };
+
+    const stdoutStreaming = streamToNodeWritable(
+      response.stdout,
+      process.stdout
+    );
+    const stderrStreaming = streamToNodeWritable(
+      response.stderr,
+      process.stderr
+    );
+
+    const result = await response.exitCode;
+    await Promise.all([stdoutStreaming, stderrStreaming]).catch(() => {});
+
+    finalExitCode = typeof result === "number" ? result : 0;
+  } catch (err) {
+    console.error(`[Host Error] Execution failed:`);
+    console.error(err);
+    finalExitCode = 1;
+  } finally {
+    if (proxyWasStartedByScript) {
+      cleanupProxy();
+    }
+
+    // CORRECTION MAJEURE :
+    // Si on a demandé de garder le processus en vie (Shim Queue/Pail), on NE QUITTE PAS.
+    if (!keepAlive) {
+      process.exit(finalExitCode);
+    }
+  }
+})();

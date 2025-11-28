@@ -1,0 +1,25 @@
+{
+    // Intelephense
+    "intelephense.environment.phpVersion": "8.2.0",
+    "intelephense.files.maxSize": 3000000,
+    // Prettier comme formateur par défaut
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    // Formatage par langage
+    "[php]": {
+        "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[blade]": {
+        "editor.defaultFormatter": "onecentlin.laravel-blade"
+    },
+    // Tailwind
+    "tailwindCSS.experimental.classRegex": [
+        [
+            "class(?:Name)?\\s*[:=]\\s*['\"`]([^'\"`]*)['\"`]",
+            "([^\\s'\"`]+)"
+        ]
+    ]
+}

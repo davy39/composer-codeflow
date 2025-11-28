@@ -1,16 +1,16 @@
 {
-    "name": "custom/composer-proxy",
-    "type": "composer-plugin",
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Custom\\Proxy\\": "./"
-        }
-    },
-    "require": {
-        "composer-plugin-api": "^2.0"
-    },
-    "extra": {
-        "class": "Custom\\Proxy\\ComposerProxyPlugin"
+  "name": "custom/composer-proxy",
+  "type": "composer-plugin",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Custom\\Proxy\\": "./"
     }
+  },
+  "require": {
+    "composer-plugin-api": "^2.0"
+  },
+  "extra": {
+    "class": "Custom\\Proxy\\ComposerProxyPlugin"
+  }
 }

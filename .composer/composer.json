@@ -1,0 +1,11 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "require": {
+        "custom/composer-proxy": "dev-main"
+    },
+    "repositories": [
+        {
+            "packagist.org": false
+        }
+    ]
+}

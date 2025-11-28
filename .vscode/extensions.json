@@ -1,0 +1,19 @@
+{
+    "recommendations": [
+        // Core PHP (fonctionne en WASM)
+        "bmewburn.vscode-intelephense-client",
+        // Laravel
+        "amiralizadeh9480.laravel-extra-intellisense",
+        "onecentlin.laravel-blade",
+        // Formatage (web-compatible)
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "editorconfig.editorconfig",
+        // Tailwind (web-compatible)
+        "bradlc.vscode-tailwindcss",
+        // Utilitaires web-compatible
+        "visualstudioexptteam.vscodeintellicode",
+        "christian-kohler.path-intellisense",
+        "usernamehw.errorlens"
+    ]
+}

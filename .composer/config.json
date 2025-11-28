@@ -1,0 +1,22 @@
+{
+    "config": {
+        "secure-http": false,
+        "disable-tls": true,
+        "cache-dir": "/home/davy39/composer-codeflow/.cache",
+        "sort-packages": true,
+        "htaccess-protect": false,
+        "use-parent-dir": true,
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "symfony/flex": true,
+            "symfony/runtime": true,
+            "custom/composer-proxy": true
+        }
+        },
+    "repositories": {
+        "local-proxy": {
+            "type": "path",
+            "url": "/home/davy39/composer-codeflow/composer-proxy"
+        }
+    }
+}
