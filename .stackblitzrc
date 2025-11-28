@@ -1,4 +1,5 @@
 {
+  "startCommand": "npm start",
   "env": {
     "PATH": "${PATH}:${PWD}/scripts:${PWD}/vendor/bin",
     "COMPOSER_HOME": "${PWD}/.composer"
